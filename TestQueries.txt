@@ -1,0 +1,133 @@
+﻿*** All Authors ***
+{
+  authors {
+    authorId,
+    name,
+    books{
+      title
+    }
+  }
+}
+
+*** All Books ***
+{
+  books {
+    bookId,
+    title,
+    publicationDate,
+    isbn,
+    author {
+      authorId,
+      name    
+    },
+    printings{
+      printingDate,
+      runSize
+    }
+  } 
+}
+
+*** All Printings ***
+{
+  printings{
+    bookId,
+    printingDate,
+    runSize
+  }
+}
+
+*** Authors by Name ***
+{
+  authors (name: "doe") {
+    name,
+    books{
+      title
+    }
+  }
+}
+
+*** Authors by Name & ID List ***
+{
+  authors (name:"Skeet", authorIds: ["aa042b03dda94906a1afa7345155fb04", "7bdf4b185d3049d0a628967045b97b72"] ) {
+    authorId,
+    name,
+    books{
+      title
+    }
+  }
+}
+
+*** Get Author ***
+{
+  author (authorId: "aa042b03dda94906a1afa7345155fb04") {
+     name,
+     authorId,
+     books{
+       title,
+       bookId,
+       publicationDate,
+       printings {
+         printingDate,
+         runSize
+       }
+     }     
+  }
+}
+
+*** Get Book ***
+{
+  book (bookId: "1be3df914ce6437384fea3c65113065b") {
+    bookId,
+    title,
+    publicationDate,
+    isbn,
+    printings{
+      printingDate,
+      runSize
+    },
+    author {
+      authorId,
+      name,        
+      books {
+        title
+      }
+    }
+  } 
+}    
+
+*** Get Books for Author ***
+{
+  books (authorId: "7bdf4b185d3049d0a628967045b97b72") {
+    bookId,
+    title,
+    publicationDate,
+    isbn,
+    author {
+      authorId,
+      name
+    },
+    printings{
+      printingDate,
+      runSize
+    }
+  } 
+}
+
+*** Books By AuthorId and BookIds ***
+{
+  books (authorId: "7bdf4b185d3049d0a628967045b97b72", bookIds: ["621f5205a5f0414dbf1493aa5c58fc80"]) {
+    bookId,
+    title,
+    publicationDate
+  } 
+}
+
+
+*** Get Books by Id List ***
+{
+  books ( bookIds: ["621f5205a5f0414dbf1493aa5c58fc80","aebafc6c35c346ebb4f9a6838b2aa8dd"]) {
+    bookId,
+    title,
+    publicationDate
+  }
+}
