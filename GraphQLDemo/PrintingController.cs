@@ -1,6 +1,8 @@
 ﻿using HotChocolate.Types;
+using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace GraphQLDemo
 {
@@ -12,17 +14,30 @@ namespace GraphQLDemo
         /// <param name="descriptor"></param>
         public static void InitializeResolvers(IObjectTypeDescriptor descriptor)
         {
-            descriptor.Field("printings").ResolveWith<PrintingController>(r => r.GetPrintings());
+            descriptor.Field("printings").Argument("bookId", a=>a.Type<IdType>()).ResolveWith<PrintingController>(r => r.GetPrintings(default));
         }
         
-        public IEnumerable<Printing> GetPrintings()
+        /// <summary>
+        /// Get printings
+        /// </summary>
+        /// <returns></returns>
+        public async Task<IEnumerable<Printing>> GetPrintings(Guid? bookId)
         {
-            return ExampleData.Printings;
+            Guid[] bookIds = bookId == null ? null : new[] { bookId.Value };
+            var printings = await PublicationsService.GetPrintingsByBookIds(bookIds);
+            return printings;
         }
 
-        public IEnumerable<Printing> GetPrintingsForBook(Book context)
+        /// <summary>
+        /// Get the printings for a book using the BookPrintingsLoader
+        /// </summary>
+        /// <param name="book"></param>
+        /// <param name="loader"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<IEnumerable<Printing>> GetPrintingsForBook(Book book, BookPrintingsLoader loader, CancellationToken cancellationToken)
         {
-            return ExampleData.Printings.Where(p => p.BookId == context.BookId);
+            return await loader.LoadAsync(book.BookId, cancellationToken);
         }
     }
 }

@@ -14,6 +14,7 @@ namespace GraphQLDemo
 
         [GraphQLName("isbn")]
         public string ISBN { get; set; }
+
         public Author Author { get; set; }
 
         public IEnumerable<Printing> Printings { get; set; }

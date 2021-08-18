@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using HotChocolate.Types;
 
 namespace GraphQLDemo
 {
-    public class AuthorController
+    public partial class AuthorController
     {
         /// <summary>
         /// Create resolvers for endpoints provided in the author controller
@@ -20,37 +22,40 @@ namespace GraphQLDemo
                 .ResolveWith<AuthorController>(r => r.GetAuthors(default, default));
         }
 
-        public Author GetAuthor(Guid authorId)
-        {
-            return ExampleData.Authors.FirstOrDefault(a => a.AuthorId == authorId);
+        /// <summary>
+        /// Get Author by ID
+        /// </summary>
+        /// <param name="authorId"></param>
+        /// <returns></returns>
+        public async Task<Author> GetAuthor(Guid authorId)
+        {         
+            var author = (await PublicationsService.FindAuthors(null, new[] { authorId })).FirstOrDefault();
+            return author;
         }
 
-
-        public IEnumerable<Author> GetAuthors(string name, List<Guid> authorIds=null)
+        /// <summary>
+        /// Get authors matching name and or ids list.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="authorIds"></param>
+        /// <returns></returns>
+        public async Task<IEnumerable<Author>> GetAuthors(string name = null, IEnumerable<Guid> authorIds = null)
         {
-
-            if (authorIds == null) {
-                authorIds = new List<Guid>();
-            }
-
-            if (string.IsNullOrWhiteSpace(name) && !authorIds.Any())
-            {
-                return ExampleData.Authors;
-            }
-
-            return ExampleData.Authors.Where(a => 
-                (string.IsNullOrWhiteSpace(name) || a.Name.Contains(name, StringComparison.CurrentCultureIgnoreCase)) &&
-                (!authorIds.Any() || authorIds.Contains(a.AuthorId)));
+            var authors = await PublicationsService.FindAuthors(name, authorIds);
+            return authors;
         }
 
-        public Author GetAuthorForBook(Book book)
+        /// <summary>
+        /// Get the Author for a Book using the BookAuthorLoader
+        /// </summary>
+        /// <param name="book"></param>
+        /// <param name="loader"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<Author> GetAuthorForBook(Book book, BookAuthorLoader loader, CancellationToken cancellationToken)
         {
-            if (ExampleData.BookAuthors.TryGetValue(book.BookId, out var authorId))
-            {
-                var author = ExampleData.Authors.FirstOrDefault(a => a.AuthorId == authorId);
-                return author;
-            }
-            return null;
+            var author = await loader.LoadAsync(book.BookId, cancellationToken);
+            return author;
         }
     }
 }

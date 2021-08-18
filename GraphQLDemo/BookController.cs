@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace GraphQLDemo
 {
@@ -20,34 +22,40 @@ namespace GraphQLDemo
                 .ResolveWith<BookController>(r => r.GetBooks(default, default));
         }
 
-        public Book GetBook(Guid bookId)
+        /// <summary>
+        /// Get book by Id
+        /// </summary>
+        /// <param name="bookId"></param>
+        /// <returns></returns>
+        public async Task<Book> GetBook(Guid bookId)
         {
-            return ExampleData.Books.FirstOrDefault(b => b.BookId == bookId);
+            var book = (await PublicationsService.FindBooks(null, new[] { bookId })).FirstOrDefault();
+            return book;
         }
        
-        public IEnumerable<Book> GetBooks(Guid authorId, List<Guid> bookIds = null)
+        /// <summary>
+        /// Get books by authorId and/or list of bookIds
+        /// </summary>
+        /// <param name="authorId"></param>
+        /// <param name="bookIds"></param>
+        /// <returns></returns>
+        public async Task<IEnumerable<Book>> GetBooks(Guid? authorId=null, IEnumerable<Guid> bookIds = null)
         {
-            if (authorId.Equals(Guid.Empty) && !(bookIds?.Count > 0))
-            {
-                return ExampleData.Books;
-            }
-
-            if (!authorId.Equals(Guid.Empty))
-            {
-                var authorBookIds = ExampleData.BookAuthors.Where(ba => ba.Value == authorId).Select(ba => ba.Key).ToList();
-                if (bookIds?.Count > 0)
-                {
-                    authorBookIds.RemoveAll(ab => !bookIds.Contains(ab));
-                }
-                bookIds = authorBookIds;
-                
-            }
-            return ExampleData.Books.Where(b => bookIds.Contains(b.BookId));
+            var books = await PublicationsService.FindBooks(authorId, bookIds);
+            return books;
         }
 
-        public IEnumerable<Book> GetBooksForAuthor(Author author = null)
+        /// <summary>
+        /// Get the books for author via the AuthorBooksLoader
+        /// </summary>
+        /// <param name="author"></param>
+        /// <param name="loader"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<Book[]> GetBooksForAuthor(Author author, AuthorBooksLoader loader, CancellationToken cancellationToken)
         {
-            return GetBooks(author.AuthorId);
+            var books = await loader.LoadAsync(author.AuthorId, cancellationToken);
+            return books;
         }
     }
 }
